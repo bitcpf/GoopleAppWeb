@@ -118,12 +118,18 @@ class Fetchdata(webapp2.RequestHandler):
 	client = pubsub.Client(project='avid-compound-114722')
 	topic = client.topic('websensors')
 	subscription = topic.subscription('webdisplay')
-	received = subscription.pull(return_immediately=True)
+	#received = subscription.pull(return_immediately=True)
+	prereceived = subscription.pull()
+#	while True:
+#	    received = subscription.pull()
+#	    if len(received) == 0:
+#		break
+#	    prereceived = received
 	status = "N/A"
-	if len(received) >= 1:
-	    messages = [recv[1] for recv in received]
+	if len(prereceived) >= 1:
+	    messages = [recv[1] for recv in prereceived]
 	    status_s = [message.data for message in messages]
-	    ack_ids = [recv[0] for recv in received] 
+	    ack_ids = [recv[0] for recv in prereceived] 
             subscription.acknowledge(ack_ids)                                                                                                                                 
             light_flag = status_s[0]
 	    print light_flag

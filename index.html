@@ -3,10 +3,16 @@
 <html>
   <body>
 
+
+    <center>
+<img src="/imgs/lightoff.jpeg" alt="light on" id="imgstatus" height="100" width="80">
+
+    </center>
+
 <hr>
     <center>
-    <p> <font size = "35">Configured Value: <span id='result'></span> </font></p>
-    <p> <font size = "35">Current Status: <span id='status'></span> </font></p>
+    <p> <font size = "35">Configured Value: <span id='result'></span></font></p>
+    <p> <font size = "35">Current Status: <span id='status'>N/A</span></font></p>
     </center>
 <hr>
 
@@ -14,73 +20,43 @@
       <div>
 	<center>
 	<button style="height:400px;width:400px;background-color:blue;border-radius:400px;font-size: 100px;"
-	   type="button" id='on'>
-	     <font color="white" id="ontxt">ON</font>
+	   type="button" id='webswitch'>
+	     <font color="white" id="switchtxt">ON</font>
 	</button>
 	</center>
       </div>
     </form>
 
-	<hr>
-	<hr>
-
-    <form action="/lumaoff" method="get">
-	<center>
-      <div>
-	<button style="height:400px;width:400px;background-color:grey;border-radius:400px;font-size: 100px;"
-	type="button" id='off'>
-	     <font color="white" id="offtxt">OFF</font>
-	</button></div>
-	</center>
-    </form>
-
-	<hr>
-	<hr>
-    
-    <form action="/fetchdata" method="get">
-	<center>
-	<div>
-	<button style="height:400px;width:400px;background-color:green;border-radius:400px;font-size: 100px;"
-	type="button" id='getstatus'>
-	     <font color="white" >Status</font>
-	</button></div>
-	</div>
-	</center>
-    </form>
-
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.5.1/jquery.min.js"></script>
 <script>
     $(document).ready(function(){
-      $("#on").click(function(){
-        $.get("/lumaon", function(ret){
-            $('#result').html(ret)
-        })
+      $("#webswitch").click(function(){
+	c = $("#status").text()
+        if(c == "Light On!"){
+            $.get("/lumaoff", function(ret){
+                $('#result').html(ret)
+            })
+        }
+        else{
+            $.get("/lumaon", function(ret){
+                $('#result').html(ret)
+            })
+        }
         $.get("/fetchdata", function(ret){
             $('#status').html(ret)
+	    tc = $("#status").text()
+	    if(tc == "Light On!"){
+                document.getElementById("webswitch").style.background="red";
+                $('#switchtxt').html("OFF")
+	    }
+	    else{
+                document.getElementById("webswitch").style.background="green";
+                $('#switchtxt').html("ON")
+	    }
         })
-	document.getElementById("on").style.background="grey";
-	document.getElementById("off").style.background="red";
+
+
       });
-
-
-      $("#off").click(function(){
-        $.get("/lumaoff", function(ret){
-            $('#result').html(ret)
-        })
-        $.get("/fetchdata", function(ret){
-            $('#status').html(ret)
-        })
-	document.getElementById("on").style.background="blue";
-	document.getElementById("off").style.background="grey";
-      });
-
-      $("#getstatus").click(function(){
-        $.get("/fetchdata", function(ret){
-            $('#status').html(ret)
-        })
-      });
-
-
     });
 </script>
    
