@@ -7,6 +7,7 @@ from gcloud import pubsub
 
 import jinja2
 import webapp2
+import json
 
 
 JINJA_ENVIRONMENT = jinja2.Environment(
@@ -45,7 +46,6 @@ class Greeting(ndb.Model):
 
 # [START main_page]
 class MainPage(webapp2.RequestHandler):
-
     def get(self):
         guestbook_name = self.request.get('guestbook_name',
                                           DEFAULT_GUESTBOOK_NAME)
@@ -63,77 +63,39 @@ class MainPage(webapp2.RequestHandler):
 
         test = 'bitcpf'
         template_values = {
-            'user': user,
-            'greetings': greetings,
-            'guestbook_name': urllib.quote_plus(guestbook_name),
-            'url': url,
-            'url_linktext': url_linktext,
             'test':test,
         }
 
         template = JINJA_ENVIRONMENT.get_template('index.html')
         self.response.write(template.render(template_values))
-# [END main_page]
+        # [END main_page]
 
 
-
-
-class Guestbook(webapp2.RequestHandler):
-    def post(self):
-        # We set the same parent key on the 'Greeting' to ensure each
-        # Greeting is in the same entity group. Queries across the
-        # single entity group will be consistent. However, the write
-        # rate to a single entity group should be limited to
-        # ~1/second.
-        guestbook_name = self.request.get('guestbook_name',
-                                          DEFAULT_GUESTBOOK_NAME)
-        greeting = Greeting(parent=guestbook_key(guestbook_name))
-
-        if users.get_current_user():
-            greeting.author = Author(
-                    identity=users.get_current_user().user_id(),
-                    email=users.get_current_user().email())
-
-        greeting.content = self.request.get('content')
-        greeting.put()
-
-        query_params = {'guestbook_name': guestbook_name}
-        self.redirect('/?' + urllib.urlencode(query_params))
 
 class Fetchdata(webapp2.RequestHandler):
     def get(self):
-	client = pubsub.Client(project='sandbox-1222')
-	topic = client.topic('BLEtest')
-	subscription = topic.subscription('BLE_sub')
-	#received = subscription.pull(return_immediately=True)
-	prereceived = subscription.pull(return_immediately=True)
-#	while True:
-#	    received = subscription.pull()
-#	    if len(received) == 0:
-#		break
-#	    prereceived = received
+        client = pubsub.Client(project='sandbox-1222')
+        topic = client.topic('BLEtest')
+        subscription = topic.subscription('BLE_sub')
+        prereceived = subscription.pull(return_immediately=True)
 
 
-	status = ["NA"]
-
-	if len(prereceived) >= 1:
-	    messages = [recv[1] for recv in prereceived]
-	    status = [message.data for message in messages]
-	    attributes = [message.attributes for message in messages]
-	    ack_ids = [recv[0] for recv in prereceived]
+        status = ["NA"]
+        attrdict = {}
+        if len(prereceived) >= 1:
+            messages = [recv[1] for recv in prereceived]
+            status = [message.data for message in messages]
+            ack_ids = [recv[0] for recv in prereceived]
             subscription.acknowledge(ack_ids)
-#            light_flag = status_s[0]
-	    print "Attributes type", type(attributes[0])
-	    print "Attributes ", attributes
-        print type(status[0])
-        print status[0]
-        test = 'change'
-#	    if(light_flag == "1"):
-#		status = "1"
-#	    if(light_flag == "0"):
-#		status = "0"
-
-	self.response.write(status[0])
+            #            light_flag = status_s[0]
+            print type(status[0])
+            print status[0]
+            if status[0] == "ANUD":
+                attributes = [message.attributes for message in messages]
+                attrdict = reduce(lambda r, d: r.update(d) or r, attributes, {})
+        print 'attrdict' , attrdict
+        self.response.headers['Content-Type'] = 'application/json'
+        self.response.write(json.dumps(attrdict))
 
 app = webapp2.WSGIApplication([
     ('/', MainPage),

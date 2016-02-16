@@ -5,9 +5,6 @@ threadsafe: true
 
 handlers:
 
-- url: /imgs
-  static_dir: imgs
-
 - url: /.*
   script: guestbook.app
 libraries:

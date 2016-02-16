@@ -3,27 +3,26 @@
 <html>
 <body>
 
-
 <center>
 	<p>Welcome to AlphaNodus BLE Distance Localication Page.</p>
 
 </center>
 
-
 <form action="/fetchdata" method="get">
 	<div>
-		<p>BLE Data: 
-		<font id="bledata">NA</font>,
-		<font id="srcbdaddr">NA</font>,
-		<font id="rssi"></font>,
-		<font id="distance">NA</font>,
-		<font id="timestamp">NA</font>,
-		{{test}}
+		<p>BLE Data:</p>
+		<p>Target Addr, SRC Addr, RSSI, Distance, Timestamp</p> 
 		
+		<p>
+		<font id="taraddr">NA</font>,
+		<font id="aggbdaddr">NA</font>,
+		<font id="rssi">NA</font>,
+		<font id="distance">NA</font>,
+		<font id="timestamp">NA</font>
+
 		</p>
 	</div>
 </form>
-
 
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.5.1/jquery.min.js"></script>
 <script>
@@ -38,17 +37,29 @@ $(document).ready(function(){
 
 		function cntfun(){
 		$.get("/fetchdata", function(ret){
-			if(ret != "NA"){
-			$("#bledata").html(ret)
+			// PUT ALL DATA here
+			if(ret['taraddr']){
+			$("#taraddr").html(ret['taraddr'])
 			}
+			if(ret['aggbdaddr']){
+			$("#aggbdaddr").html(ret['aggbdaddr'])
+			}
+			if(ret['rssi']){
+			$("#rssi").html(ret['rssi'])
+			}
+			if(ret['distance']){
+			$("#distance").html(ret['distance'])
+			}
+			if(ret['timestamp']){
+			$("#timestamp").html(ret['timestamp'])
+			}
+
 			})
 
 		}
 
-
-		});
+});
 </script>
-
 
 
 </body>
