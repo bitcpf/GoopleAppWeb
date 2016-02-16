@@ -61,12 +61,14 @@ class MainPage(webapp2.RequestHandler):
             url = users.create_login_url(self.request.uri)
             url_linktext = 'Login'
 
+        test = 'bitcpf'
         template_values = {
             'user': user,
             'greetings': greetings,
             'guestbook_name': urllib.quote_plus(guestbook_name),
             'url': url,
             'url_linktext': url_linktext,
+            'test':test,
         }
 
         template = JINJA_ENVIRONMENT.get_template('index.html')
@@ -98,53 +100,43 @@ class Guestbook(webapp2.RequestHandler):
         query_params = {'guestbook_name': guestbook_name}
         self.redirect('/?' + urllib.urlencode(query_params))
 
-class Lumaon(webapp2.RequestHandler):
-    def get(self):
-	client = pubsub.Client(project='avid-compound-114722')
-	topic = client.topic('christest')
-	topic.publish('lumaon')
-	self.response.write("On CMD Sent")
-
-
-class Lumaoff(webapp2.RequestHandler):
-    def get(self):
-	client = pubsub.Client(project='avid-compound-114722')
-	topic = client.topic('christest')
-	topic.publish('lumaoff')
-	self.response.write("Off CMD Sent")
-
 class Fetchdata(webapp2.RequestHandler):
     def get(self):
-	client = pubsub.Client(project='avid-compound-114722')
-	topic = client.topic('websensors')
-	subscription = topic.subscription('webdisplay')
+	client = pubsub.Client(project='sandbox-1222')
+	topic = client.topic('BLEtest')
+	subscription = topic.subscription('BLE_sub')
 	#received = subscription.pull(return_immediately=True)
-	prereceived = subscription.pull()
+	prereceived = subscription.pull(return_immediately=True)
 #	while True:
 #	    received = subscription.pull()
 #	    if len(received) == 0:
 #		break
 #	    prereceived = received
-	status = "N/A"
+
+
+	status = ["NA"]
+
 	if len(prereceived) >= 1:
 	    messages = [recv[1] for recv in prereceived]
-	    status_s = [message.data for message in messages]
-	    ack_ids = [recv[0] for recv in prereceived] 
-            subscription.acknowledge(ack_ids)                                                                                                                                 
-            light_flag = status_s[0]
-	    print light_flag
-	    if(light_flag == "1"):
-		status = "Light On!"
-	    if(light_flag == "0"):
-		status = "Light Off!"
-	
+	    status = [message.data for message in messages]
+	    attributes = [message.attributes for message in messages]
+	    ack_ids = [recv[0] for recv in prereceived]
+            subscription.acknowledge(ack_ids)
+#            light_flag = status_s[0]
+	    print "Attributes type", type(attributes[0])
+	    print "Attributes ", attributes
+        print type(status[0])
+        print status[0]
+        test = 'change'
+#	    if(light_flag == "1"):
+#		status = "1"
+#	    if(light_flag == "0"):
+#		status = "0"
 
-	self.response.write(status)
+	self.response.write(status[0])
 
 app = webapp2.WSGIApplication([
     ('/', MainPage),
     #('/sign', Guestbook),
-    ('/lumaon', Lumaon),
-    ('/lumaoff', Lumaoff),
     ('/fetchdata', Fetchdata),
 ], debug=True)

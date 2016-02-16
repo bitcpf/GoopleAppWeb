@@ -1,67 +1,56 @@
 <!DOCTYPE html>
 {% autoescape true %}
 <html>
-  <body>
+<body>
 
 
-    <center>
-<img src="/imgs/lightoff.jpeg" alt="light on" id="imgstatus" height="100" width="80">
+<center>
+	<p>Welcome to AlphaNodus BLE Distance Localication Page.</p>
 
-    </center>
+</center>
 
-<hr>
-    <center>
-    <p> <font size = "35">Configured Value: <span id='result'></span></font></p>
-    <p> <font size = "35">Current Status: <span id='status'>N/A</span></font></p>
-    </center>
-<hr>
 
-    <form action="/lumaon" method="get">
-      <div>
-	<center>
-	<button style="height:400px;width:400px;background-color:blue;border-radius:400px;font-size: 100px;"
-	   type="button" id='webswitch'>
-	     <font color="white" id="switchtxt">ON</font>
-	</button>
-	</center>
-      </div>
-    </form>
+<form action="/fetchdata" method="get">
+	<div>
+		<p>BLE Data: 
+		<font id="bledata">NA</font>,
+		<font id="srcbdaddr">NA</font>,
+		<font id="rssi"></font>,
+		<font id="distance">NA</font>,
+		<font id="timestamp">NA</font>,
+		{{test}}
+		
+		</p>
+	</div>
+</form>
+
 
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.5.1/jquery.min.js"></script>
 <script>
-    $(document).ready(function(){
-      $("#webswitch").click(function(){
-	c = $("#status").text()
-        if(c == "Light On!"){
-            $.get("/lumaoff", function(ret){
-                $('#result').html(ret)
-            })
-        }
-        else{
-            $.get("/lumaon", function(ret){
-                $('#result').html(ret)
-            })
-        }
-        $.get("/fetchdata", function(ret){
-            $('#status').html(ret)
-	    tc = $("#status").text()
-	    if(tc == "Light On!"){
-                document.getElementById("webswitch").style.background="red";
-                $('#switchtxt').html("OFF")
-	    }
-	    else{
-                document.getElementById("webswitch").style.background="green";
-                $('#switchtxt').html("ON")
-	    }
-        })
+$(document).ready(function(){
+		var flag = 0;
 
 
-      });
-    });
+		$(window).load(function() {
+			// executes when complete page is fully loaded, including all frames, objects and images
+			setInterval(cntfun,3000);       
+			});
+
+		function cntfun(){
+		$.get("/fetchdata", function(ret){
+			if(ret != "NA"){
+			$("#bledata").html(ret)
+			}
+			})
+
+		}
+
+
+		});
 </script>
-   
 
 
-  </body>
+
+</body>
 </html>
 {% endautoescape %}

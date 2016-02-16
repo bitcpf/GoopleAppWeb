@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+{% autoescape true %}
+<html>
+  <body>
+
+
+    <center>
+<img src="/imgs/lightoff.jpeg" alt="light status" id="imgstatus" height="100" width="80">
+
+    </center>
+
+<hr>
+    <p> <font size = "35">Test <span id='test'></span> </font></p>
+<hr>
+
+    <form>
+      <div>
+	<center>
+	<button style="height:200px;width:200px;background-color:blue;border-radius:400px;font-size: 80px;"
+	   type="button" id='imgswitch'>
+	     <font color="white" id="imgsta">IMGSTA</font>
+	</button>
+	</center>
+      </div>
+    </form>
+
+    <form action="/lumaon" method="get">
+      <div>
+        <center>
+        <button style="height:400px;width:400px;background-color:blue;border-radius:400px;font-size: 100px;"
+           type="button" id='webswitch'>
+             <font color="white" id="switchtxt">ON</font>
+        </button>
+        </center>
+      </div>
+    </form>
+
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.5.1/jquery.min.js"></script>
+<script>
+    $(document).ready(function(){
+      $("#imgswitch").click(function(){
+	$("#test").html("Click imgswitch")
+	$("#imgstatus").attr('src','/imgs/lighton.jpeg');
+      });
+
+      $("#webswitch").click(function(){
+	c = $("#status").text()
+        if(c == "Light On!"){
+            $.get("/lumaoff", function(ret){
+                $('#result').html(ret)
+            })
+        }
+        else{
+            $.get("/lumaon", function(ret){
+                $('#result').html(ret)
+            })
+        }
+        $.get("/fetchdata", function(ret){
+            $('#status').html(ret)
+	    tc = $("#status").text()
+	    if(tc == "Light On!"){
+                document.getElementById("webswitch").style.background="red";
+                $('#switchtxt').html("OFF")
+	    }
+	    else{
+                document.getElementById("webswitch").style.background="green";
+                $('#switchtxt').html("ON")
+	    }
+        })
+      });
+    });
+</script>
+   
+
+
+  </body>
+</html>
+{% endautoescape %}
