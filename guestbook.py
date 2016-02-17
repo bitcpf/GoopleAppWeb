@@ -101,4 +101,5 @@ app = webapp2.WSGIApplication([
     ('/', MainPage),
     #('/sign', Guestbook),
     ('/fetchdata', Fetchdata),
+    #('/fetchdata', Fetchdata),
 ], debug=True)
