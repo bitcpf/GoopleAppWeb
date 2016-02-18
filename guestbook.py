@@ -1,14 +1,11 @@
 import os
-import urllib
 
-from google.appengine.api import users
-from google.appengine.ext import ndb
 from gcloud import pubsub
 
 import jinja2
 import webapp2
 import json
-
+import time
 
 JINJA_ENVIRONMENT = jinja2.Environment(
     loader=jinja2.FileSystemLoader(os.path.dirname(__file__)),
@@ -23,44 +20,10 @@ DEFAULT_GUESTBOOK_NAME = 'default_guestbook'
 # will be consistent.  However, the write rate should be limited to
 # ~1/second.
 
-def guestbook_key(guestbook_name=DEFAULT_GUESTBOOK_NAME):
-    """Constructs a Datastore key for a Guestbook entity.
-
-    We use guestbook_name as the key.
-    """
-    return ndb.Key('Guestbook', guestbook_name)
-
-
-class Author(ndb.Model):
-    """Sub model for representing an author."""
-    identity = ndb.StringProperty(indexed=False)
-    email = ndb.StringProperty(indexed=False)
-
-
-class Greeting(ndb.Model):
-    """A main model for representing an individual Guestbook entry."""
-    author = ndb.StructuredProperty(Author)
-    content = ndb.StringProperty(indexed=False)
-    date = ndb.DateTimeProperty(auto_now_add=True)
-
-
 # [START main_page]
 class MainPage(webapp2.RequestHandler):
+
     def get(self):
-        guestbook_name = self.request.get('guestbook_name',
-                                          DEFAULT_GUESTBOOK_NAME)
-        greetings_query = Greeting.query(
-            ancestor=guestbook_key(guestbook_name)).order(-Greeting.date)
-        greetings = greetings_query.fetch(10)
-
-        user = users.get_current_user()
-        if user:
-            url = users.create_logout_url(self.request.uri)
-            url_linktext = 'Logout'
-        else:
-            url = users.create_login_url(self.request.uri)
-            url_linktext = 'Login'
-
         test = 'bitcpf'
         template_values = {
             'test':test,
@@ -70,32 +33,145 @@ class MainPage(webapp2.RequestHandler):
         self.response.write(template.render(template_values))
         # [END main_page]
 
-
-
 class Fetchdata(webapp2.RequestHandler):
+    ble_data = {}
+    def ls_topic(self, client):
+        # return only one sub for each topic, if no sub, create one
+        # Has problem but works
+
+        proj_path = '/projects/sandbox-1222/'
+        resp = client.connection.api_request(method = 'GET', path = proj_path+'subscriptions', query_params={})
+        if len(resp) > 0:
+            subscriptions = resp['subscriptions']
+        else:
+            subscriptions = []
+        tps,np_token = client.list_topics()
+        tp_name = [tp.name for tp in tps]
+        # Creat topic dict
+        topic_subs = {}
+        for tp in tp_name:
+            topic_subs[tp] = []
+
+
+        if len(subscriptions) > 0:
+            for subscription in subscriptions:
+                tmp_topic = subscription['topic'][len(proj_path)+6:]
+                tmp_sub = subscription['name'][len(proj_path)+13:]
+                if len(topic_subs[tmp_topic]) == 0:
+                    topic_subs[tmp_topic] = tmp_sub
+        cnt = 1
+        for tp in tp_name:
+            self.ble_data[tp] = {}
+            while len(topic_subs[tp]) == 0:
+                try:
+                    tmp_sub = None
+                    topic = client.topic(tp)
+                    tmp_sub = topic.subscription('weblisten'+str(cnt))
+                    tmp_sub.create()
+                    topic_subs[tp] = 'weblisten'+str(cnt)
+#                   time.sleep(2)
+                except:
+                    #print 'except'
+                    pass
+                cnt = cnt + 1
+
+        return topic_subs
+
+    def latest_parse(self,client,item):
+        # Input the topic and subscription, return the latest data of each topic
+        #print "Latest Parse Called"
+        topic = client.topic(item[0])
+        subscription = topic.subscription(item[1])
+        latesttime = 0
+
+        agg_dict = {}
+
+        received = subscription.pull(max_messages=1, return_immediately=True)
+
+
+        while len(received) > 0 :
+            messages = [recv[1] for recv in received]
+            attributes = [message.attributes for message in messages]
+            attrdict = reduce(lambda r, d: r.update(d) or r, attributes, {})
+            #print attrdict
+            uptime = int(attrdict['timestamp'])
+            aggbd = attrdict['aggbdaddr']
+            #print 'Update TIme is:', uptime
+            #print 'latesttime  is:', latesttime
+
+            if not agg_dict.has_key(aggbd):
+                agg_dict[aggbd] = attrdict
+                received = subscription.pull(max_messages=1, return_immediately=True)
+                continue
+            if latesttime == uptime:
+                received = subscription.pull(max_messages=1, return_immediately=True)
+                continue
+
+            if latesttime < uptime:
+                #print uptime
+                if latesttime > 0 :
+                    subscription.acknowledge(ack_id)
+                latesttime = uptime
+                # Package data as dict
+                agg_dict[aggbd] = attrdict
+                ack_id = [recv[0] for recv in received]
+                #print "New update",latesttime
+            else:
+                ack_id = [recv[0] for recv in received]
+                subscription.acknowledge(ack_id)
+                #print 'ack elder one'
+            #time.sleep(1)
+            received = subscription.pull(max_messages=1, return_immediately=True)
+        #print "In parse function", agg_dict
+        return agg_dict
+
+
+
+    # topic_subs is dict (tracker_bdaddr:[subs])
+    def parse_subs(self,client, topic_subs):
+        for item in topic_subs.items():
+            # Get latest agg report under certain topic
+            tmp_topic_agg_dict = self.latest_parse(client, item)
+            if len(tmp_topic_agg_dict) > 0:
+                for agg_device in list(tmp_topic_agg_dict):
+                    #print agg_device
+                    self.ble_data[item[0]][agg_device] = tmp_topic_agg_dict[agg_device]
+
+
+
+
+
     def get(self):
         client = pubsub.Client(project='sandbox-1222')
-        topic = client.topic('BLEtest')
-        subscription = topic.subscription('BLE_sub')
-        prereceived = subscription.pull(return_immediately=True)
+        #st_time = time.time()
+        #print "Start time is : ",st_time
 
 
-        status = ["NA"]
-        attrdict = {}
-        if len(prereceived) >= 1:
-            messages = [recv[1] for recv in prereceived]
-            status = [message.data for message in messages]
-            ack_ids = [recv[0] for recv in prereceived]
-            subscription.acknowledge(ack_ids)
-            #            light_flag = status_s[0]
-            print type(status[0])
-            print status[0]
-            if status[0] == "ANUD":
-                attributes = [message.attributes for message in messages]
-                attrdict = reduce(lambda r, d: r.update(d) or r, attributes, {})
-        print 'attrdict' , attrdict
+       # topic = client.topic('BLEtest')
+       # subscription = topic.subscription('BLE_sub')
+       # prereceived = subscription.pull(return_immediately=True)
+
+
+       # status = ["NA"]
+       # attrdict = {}
+       # if len(prereceived) >= 1:
+       #     messages = [recv[1] for recv in prereceived]
+       #     status = [message.data for message in messages]
+       #     ack_ids = [recv[0] for recv in prereceived]
+       #     subscription.acknowledge(ack_ids)
+       #     #            light_flag = status_s[0]
+       #     print type(status[0])
+       #     print status[0]
+       #     if status[0] == "ANUD":
+       #         attributes = [message.attributes for message in messages]
+       #         attrdict = reduce(lambda r, d: r.update(d) or r, attributes, {})
+       # print 'attrdict' , attrdict
+        topic_subscriptions = self.ls_topic(client)
+        self.parse_subs(client,topic_subscriptions)
+        #print "Main Funm ble data", self.ble_data
+        #print "Response time is : ", time.time()-st_time
         self.response.headers['Content-Type'] = 'application/json'
-        self.response.write(json.dumps(attrdict))
+        self.response.write(json.dumps(self.ble_data))
 
 app = webapp2.WSGIApplication([
     ('/', MainPage),

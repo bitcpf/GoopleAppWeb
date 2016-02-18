@@ -4,7 +4,7 @@
 <body>
 
 <center>
-	<p>Welcome to AlphaNodus BLE Distance Localication Page.</p>
+	<p>Welcome to AlphaNodus BLE Distance Localication Page, Test deploy.</p>
 
 </center>
 
@@ -32,14 +32,14 @@ $(document).ready(function(){
 
 		$(window).load(function() {
 			// executes when complete page is fully loaded, including all frames, objects and images
-			setInterval(cntfun,3000);       
+			setInterval(cntfun,5000);       
 			});
 
 		function cntfun(){
 		$.get("/fetchdata", function(ret){
 			// PUT ALL DATA here
-			if(ret['taraddr']){
-			$("#taraddr").html(ret['taraddr'])
+			if(ret['BLEtest']){
+			$("#taraddr").html(ret['BLEtest'])
 			}
 			if(ret['aggbdaddr']){
 			$("#aggbdaddr").html(ret['aggbdaddr'])
