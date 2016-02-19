@@ -13,8 +13,6 @@ JINJA_ENVIRONMENT = jinja2.Environment(
     autoescape=True)
 
 
-DEFAULT_GUESTBOOK_NAME = 'default_guestbook'
-
 # We set a parent key on the 'Greetings' to ensure that they are all
 # in the same entity group. Queries across the single entity group
 # will be consistent.  However, the write rate should be limited to
@@ -22,11 +20,12 @@ DEFAULT_GUESTBOOK_NAME = 'default_guestbook'
 
 # [START main_page]
 class MainPage(webapp2.RequestHandler):
-
     def get(self):
-        test = 'bitcpf'
+        client = pubsub.Client(project='sandbox-1222')
+        topics, npt = client.list_topics()
+        tp_name = [topic.name for topic in topics]
         template_values = {
-            'test':test,
+            'topics':tp_name,
         }
 
         template = JINJA_ENVIRONMENT.get_template('index.html')
@@ -95,7 +94,8 @@ class Fetchdata(webapp2.RequestHandler):
             attrdict = reduce(lambda r, d: r.update(d) or r, attributes, {})
             #print attrdict
             uptime = int(attrdict['timestamp'])
-            aggbd = attrdict['aggbdaddr']
+            aggbd = attrdict.pop('aggbdaddr',None)
+            attrdict.pop('taraddr',None)
             #print 'Update TIme is:', uptime
             #print 'latesttime  is:', latesttime
 
@@ -152,30 +152,20 @@ class Fetchdata(webapp2.RequestHandler):
        # prereceived = subscription.pull(return_immediately=True)
 
 
-       # status = ["NA"]
-       # attrdict = {}
-       # if len(prereceived) >= 1:
-       #     messages = [recv[1] for recv in prereceived]
-       #     status = [message.data for message in messages]
-       #     ack_ids = [recv[0] for recv in prereceived]
-       #     subscription.acknowledge(ack_ids)
-       #     #            light_flag = status_s[0]
-       #     print type(status[0])
-       #     print status[0]
-       #     if status[0] == "ANUD":
-       #         attributes = [message.attributes for message in messages]
-       #         attrdict = reduce(lambda r, d: r.update(d) or r, attributes, {})
-       # print 'attrdict' , attrdict
-        topic_subscriptions = self.ls_topic(client)
-        self.parse_subs(client,topic_subscriptions)
+        #topic_subscriptions = self.ls_topic(client)
+        #self.parse_subs(client,topic_subscriptions)
         #print "Main Funm ble data", self.ble_data
         #print "Response time is : ", time.time()-st_time
         self.response.headers['Content-Type'] = 'application/json'
-        self.response.write(json.dumps(self.ble_data))
+        test = {u'test1': {}, u'BLEtest': {u'12:34:21:32:32:a2': {u'distance': u'4', u'rssi': u'-65', u'timestamp': u'1118'}, u'12:34:21:32:32:23': {u'distance': u'4', u'rssi': u'-65', u'timestamp': u'1116'}}, u'repository-changes.default': {}}
+        print json.dumps(test)
+        self.response.write(json.dumps(test))
+        #self.response.write(json.dumps(self.ble_data))
 
 app = webapp2.WSGIApplication([
     ('/', MainPage),
     #('/sign', Guestbook),
     ('/fetchdata', Fetchdata),
+    ('/fetadv', Fetchdata.ls_topic),
     #('/fetchdata', Fetchdata),
 ], debug=True)

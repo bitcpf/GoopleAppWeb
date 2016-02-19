@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+{% autoescape true %}
+<html>
+<body>
+
+<center>
+	<p>Welcome to AlphaNodus BLE Distance Localication Page, Test deploy.</p>
+
+</center>
+
+<form action="/fetchdata" method="get">
+	<div>
+		<p>BLE Data:</p>
+		<p>Target Addr, SRC Addr, RSSI, Distance, Timestamp</p> 
+		
+		<p>
+		<font id="taraddr">NA</font>,
+		<font id="aggbdaddr">NA</font>,
+		<font id="rssi">NA</font>,
+		<font id="distance">NA</font>,
+		<font id="timestamp">NA</font>
+
+		</p>
+	</div>
+</form>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.5.1/jquery.min.js"></script>
+<script>
+$(document).ready(function(){
+		var flag = 0;
+
+
+		$(window).load(function() {
+			// executes when complete page is fully loaded, including all frames, objects and images
+			setInterval(cntfun,5000);       
+			});
+
+		function cntfun(){
+		$.get("/fetchdata", function(ret){
+			// PUT ALL DATA here
+			if(ret['BLEtest']){
+			$("#taraddr").html(ret['BLEtest'])
+			}
+			if(ret['aggbdaddr']){
+			$("#aggbdaddr").html(ret['aggbdaddr'])
+			}
+			if(ret['rssi']){
+			$("#rssi").html(ret['rssi'])
+			}
+			if(ret['distance']){
+			$("#distance").html(ret['distance'])
+			}
+			if(ret['timestamp']){
+			$("#timestamp").html(ret['timestamp'])
+			}
+
+			})
+
+		}
+
+});
+</script>
+
+
+</body>
+</html>
+{% endautoescape %}

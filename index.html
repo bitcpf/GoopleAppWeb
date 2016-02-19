@@ -1,67 +1,112 @@
 <!DOCTYPE html>
-{% autoescape true %}
 <html>
+<head>
+<style>
+table, th, td {
+	border: 1px solid black;
+	border-collapse: collapse;
+}
+th, td {
+	padding: 5px;
+}
+</style>
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
+<script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+</head>
 <body>
 
 <center>
-	<p>Welcome to AlphaNodus BLE Distance Localication Page, Test deploy.</p>
+
+	<p id = 'test'> Test</p>
+
+	<div class="container">
+		<h2 id = 'drop_downmenu'>Select Advertiser</h2>
+
+		<select id = 'adver_select'>
+			{% for topic in topics %}
+			<option value="{{ topic }}">{{ topic }}</option>
+			{% endfor %}
+		</select>
+
+	</div>
+
+	<h1 id = 'advertiser'>Please Select One Advertiser</h1>
+
+	<table style="width:50%" id = 'bletable'>
+		<tr>
+			<th>Tracker BDADDR</th>
+			<th>RSSI Value</th>
+			<th>Distance</th>
+			<th>Last update</th>
+		</tr>
+	</table>
 
 </center>
-
-<form action="/fetchdata" method="get">
-	<div>
-		<p>BLE Data:</p>
-		<p>Target Addr, SRC Addr, RSSI, Distance, Timestamp</p> 
-		
-		<p>
-		<font id="taraddr">NA</font>,
-		<font id="aggbdaddr">NA</font>,
-		<font id="rssi">NA</font>,
-		<font id="distance">NA</font>,
-		<font id="timestamp">NA</font>
-
-		</p>
-	</div>
-</form>
-
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.5.1/jquery.min.js"></script>
+
+
 <script>
 $(document).ready(function(){
-		var flag = 0;
+
+		var x;
+		$('#adver_select').change(function(e){
+			// Your event handler
+			cntfun();
+
+
+
+			});
+
+		// And now fire change event when the DOM is ready
+		$('#adver_select').trigger('change');
 
 
 		$(window).load(function() {
 			// executes when complete page is fully loaded, including all frames, objects and images
 			setInterval(cntfun,5000);       
+
 			});
 
 		function cntfun(){
-		$.get("/fetchdata", function(ret){
-			// PUT ALL DATA here
-			if(ret['BLEtest']){
-			$("#taraddr").html(ret['BLEtest'])
-			}
-			if(ret['aggbdaddr']){
-			$("#aggbdaddr").html(ret['aggbdaddr'])
-			}
-			if(ret['rssi']){
-			$("#rssi").html(ret['rssi'])
-			}
-			if(ret['distance']){
-			$("#distance").html(ret['distance'])
-			}
-			if(ret['timestamp']){
-			$("#timestamp").html(ret['timestamp'])
-			}
+			$.get("/fetchdata", function(ret){
+					x = document.getElementById("adver_select").value;
+					$("#advertiser").html(x);
+					if(ret[x]){
+						data = ret[x];
+						var aggers = Object.keys(data);
 
-			})
+					var tr;
+					tr = $('<tr>');
+					tr.append("<th>" + "Tracker BD" + "</th>");
+					tr.append("<th>" + "RSSI" + "</th>");
+					tr.append("<th>" + "Distance" + "</th>");
+					tr.append("<th>" + "Update Time" + "</th>");
+					tr.append('</tr>');  
+						$('#bletable').html(tr);
+						for(var i = 0 ; i < aggers.length; i++){
+					tr = $('<tr>');
+					tr.append("<th>" + aggers[i] + "</th>");
+					tr.append("<th>" + data[aggers[i]]['rssi'] + "</th>");
+					tr.append("<th>" + data[aggers[i]]['distance']+ "</th>");
+					tr.append("<th>" + data[aggers[i]]['timestamp']+ "</th>");
+					tr.append('</tr>');  
 
+						$('#bletable').append(tr);
+							
+						}
+
+						
+					$("#test").html(Object.keys(data)[1]);
+					}
+
+
+					})
 		}
-
 });
 </script>
 
-
 </body>
 </html>
-{% endautoescape %}
