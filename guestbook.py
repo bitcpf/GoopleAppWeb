@@ -152,15 +152,15 @@ class Fetchdata(webapp2.RequestHandler):
        # prereceived = subscription.pull(return_immediately=True)
 
 
-        #topic_subscriptions = self.ls_topic(client)
-        #self.parse_subs(client,topic_subscriptions)
-        #print "Main Funm ble data", self.ble_data
-        #print "Response time is : ", time.time()-st_time
+        topic_subscriptions = self.ls_topic(client)
+        self.parse_subs(client,topic_subscriptions)
+        print "Main Funm ble data", self.ble_data
+       #print "Response time is : ", time.time()-st_time
         self.response.headers['Content-Type'] = 'application/json'
-        test = {u'test1': {}, u'BLEtest': {u'12:34:21:32:32:a2': {u'distance': u'4', u'rssi': u'-65', u'timestamp': u'1118'}, u'12:34:21:32:32:23': {u'distance': u'4', u'rssi': u'-65', u'timestamp': u'1116'}}, u'repository-changes.default': {}}
-        print json.dumps(test)
-        self.response.write(json.dumps(test))
-        #self.response.write(json.dumps(self.ble_data))
+        #test = {u'test1': {}, u'BLEtest': {u'12:34:21:32:32:a2': {u'distance': u'4', u'rssi': u'-65', u'timestamp': u'1118'}, u'12:34:21:32:32:23': {u'distance': u'4', u'rssi': u'-65', u'timestamp': u'1116'}}, u'repository-changes.default': {}}
+        #print json.dumps(test)
+        #self.response.write(json.dumps(test))
+        self.response.write(json.dumps(self.ble_data))
 
 app = webapp2.WSGIApplication([
     ('/', MainPage),

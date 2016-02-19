@@ -66,7 +66,7 @@ $(document).ready(function(){
 
 		$(window).load(function() {
 			// executes when complete page is fully loaded, including all frames, objects and images
-			setInterval(cntfun,5000);       
+			setInterval(cntfun,6000);       
 
 			});
 
@@ -75,9 +75,10 @@ $(document).ready(function(){
 					x = document.getElementById("adver_select").value;
 					$("#advertiser").html(x);
 					if(ret[x]){
-						data = ret[x];
-						var aggers = Object.keys(data);
-
+					data = ret[x];
+					var aggers = Object.keys(data);
+					if(aggers.length > 0){
+					//$("#test").html(aggers.length);
 					var tr;
 					tr = $('<tr>');
 					tr.append("<th>" + "Tracker BD" + "</th>");
@@ -85,8 +86,8 @@ $(document).ready(function(){
 					tr.append("<th>" + "Distance" + "</th>");
 					tr.append("<th>" + "Update Time" + "</th>");
 					tr.append('</tr>');  
-						$('#bletable').html(tr);
-						for(var i = 0 ; i < aggers.length; i++){
+					$('#bletable').html(tr);
+					for(var i = 0 ; i < aggers.length; i++){
 					tr = $('<tr>');
 					tr.append("<th>" + aggers[i] + "</th>");
 					tr.append("<th>" + data[aggers[i]]['rssi'] + "</th>");
@@ -94,16 +95,17 @@ $(document).ready(function(){
 					tr.append("<th>" + data[aggers[i]]['timestamp']+ "</th>");
 					tr.append('</tr>');  
 
-						$('#bletable').append(tr);
-							
-						}
+					$('#bletable').append(tr);
 
-						
-					$("#test").html(Object.keys(data)[1]);
 					}
 
 
-					})
+					}
+					}
+
+
+
+			})
 		}
 });
 </script>
